@@ -1,7 +1,8 @@
-
 import { useState } from 'react';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import Sidebar from '@/components/Sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import AppSidebar from '@/components/AppSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ const Settings = () => {
   const { settings, updateSettings, isLoaded } = useUserSettings();
   const [tempSettings, setTempSettings] = useState({ ...settings });
   const [profileImage, setProfileImage] = useState<string | null>(settings.avatar || null);
+  const isMobile = useIsMobile();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,7 +42,6 @@ const Settings = () => {
   if (!isLoaded) {
     return (
       <div className="flex h-screen bg-gray-50">
-        <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-industrial-blue"></div>
         </div>
@@ -49,17 +50,20 @@ const Settings = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-200 p-4">
-          <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
-          <p className="text-gray-500">Customize your dashboard experience</p>
-        </header>
+    <SidebarProvider defaultOpen={!isMobile}>
+      <div className="flex h-screen w-full bg-gray-50">
+        <AppSidebar />
         
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-4xl mx-auto">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white border-b border-gray-200 p-4">
+            <div className="flex items-center">
+              <SidebarTrigger className="mr-2" />
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800">Settings</h1>
+            </div>
+            <p className="text-gray-500">Customize your dashboard experience</p>
+          </header>
+          
+          <main className="flex-1 overflow-y-auto p-4">
             <Tabs defaultValue="profile" className="space-y-4">
               <TabsList className="grid w-full max-w-md grid-cols-3">
                 <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -252,10 +256,10 @@ const Settings = () => {
                 Save Settings
               </Button>
             </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
