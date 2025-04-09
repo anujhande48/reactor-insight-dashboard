@@ -3,17 +3,27 @@ import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import type { Batch } from '@/hooks/useReactorData';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface BatchTableProps {
   batches: Batch[];
 }
 
-type SortField = 'name' | 'status' | 'startTime' | 'progress';
+type SortField = 'name' | 'status' | 'startTime' | 'progress' | 'reactorId' | 'batchSize';
 type SortDirection = 'asc' | 'desc';
 
 const BatchTable: React.FC<BatchTableProps> = ({ batches }) => {
   const [sortField, setSortField] = useState<SortField>('startTime');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const isMobile = useIsMobile();
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -41,6 +51,12 @@ const BatchTable: React.FC<BatchTableProps> = ({ batches }) => {
         case 'progress':
           comparison = a.progress - b.progress;
           break;
+        case 'reactorId':
+          comparison = a.reactorId.localeCompare(b.reactorId);
+          break;
+        case 'batchSize':
+          comparison = (a.batchSize || 0) - (b.batchSize || 0);
+          break;
         default:
           comparison = 0;
       }
@@ -64,104 +80,90 @@ const BatchTable: React.FC<BatchTableProps> = ({ batches }) => {
     }
   };
 
+  // Helper function for sorting indicators
+  const SortIndicator = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="ml-1 h-4 w-4 inline" /> 
+      : <ArrowDown className="ml-1 h-4 w-4 inline" />;
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200 bg-white">
-        <thead className="bg-gray-50">
-          <tr>
-            <th 
-              scope="col" 
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+    <div className="w-full">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead 
+              className="cursor-pointer"
               onClick={() => handleSort('name')}
             >
-              <div className="flex items-center">
-                Batch Name
-                {sortField === 'name' && (
-                  sortDirection === 'asc' ? <ArrowUp className="ml-1 h-4 w-4" /> : <ArrowDown className="ml-1 h-4 w-4" />
-                )}
-              </div>
-            </th>
-            <th 
-              scope="col" 
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+              BatchNo
+              <SortIndicator field="name" />
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer"
+              onClick={() => handleSort('reactorId')}
+            >
+              MainUnit
+              <SortIndicator field="reactorId" />
+            </TableHead>
+            {!isMobile && (
+              <TableHead>
+                Product
+              </TableHead>
+            )}
+            <TableHead 
+              className="cursor-pointer"
+              onClick={() => handleSort('batchSize')}
+            >
+              BatchSize
+              <SortIndicator field="batchSize" />
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer"
               onClick={() => handleSort('status')}
             >
-              <div className="flex items-center">
-                Status
-                {sortField === 'status' && (
-                  sortDirection === 'asc' ? <ArrowUp className="ml-1 h-4 w-4" /> : <ArrowDown className="ml-1 h-4 w-4" />
-                )}
-              </div>
-            </th>
-            <th 
-              scope="col" 
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+              BatchStatus
+              <SortIndicator field="status" />
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer"
               onClick={() => handleSort('startTime')}
             >
-              <div className="flex items-center">
-                Start Time
-                {sortField === 'startTime' && (
-                  sortDirection === 'asc' ? <ArrowUp className="ml-1 h-4 w-4" /> : <ArrowDown className="ml-1 h-4 w-4" />
-                )}
-              </div>
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Reactor
-            </th>
-            <th 
-              scope="col" 
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-              onClick={() => handleSort('progress')}
-            >
-              <div className="flex items-center">
-                Progress
-                {sortField === 'progress' && (
-                  sortDirection === 'asc' ? <ArrowUp className="ml-1 h-4 w-4" /> : <ArrowDown className="ml-1 h-4 w-4" />
-                )}
-              </div>
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Operator
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+              BatchDate
+              <SortIndicator field="startTime" />
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {sortedBatches.map((batch) => (
-            <tr key={batch.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="font-medium">{batch.name}</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
+            <TableRow key={batch.id} className="hover:bg-gray-50">
+              <TableCell className="font-medium">
+                {batch.name}
+              </TableCell>
+              <TableCell>
+                {batch.reactorId}
+              </TableCell>
+              {!isMobile && (
+                <TableCell>
+                  {batch.product || "Standard Product"}
+                </TableCell>
+              )}
+              <TableCell>
+                {batch.batchSize || Math.floor(Math.random() * 1000) + 500}kg
+              </TableCell>
+              <TableCell>
                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(batch.status)}`}>
                   {batch.status}
                 </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {format(batch.startTime, 'MMM d, yyyy HH:mm')}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {batch.reactorId}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      batch.status === 'running' ? 'bg-blue-500' :
-                      batch.status === 'completed' ? 'bg-green-500' :
-                      batch.status === 'delayed' ? 'bg-amber-500' : 'bg-red-500'
-                    }`}
-                    style={{ width: `${batch.progress}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-gray-500 mt-1">{batch.progress}%</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {batch.operator}
-              </td>
-            </tr>
+              </TableCell>
+              <TableCell>
+                {format(batch.startTime, 'MMM d, yyyy')}
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };

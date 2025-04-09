@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 
 export interface Reactor {
@@ -19,6 +18,8 @@ export interface Batch {
   status: 'running' | 'completed' | 'delayed' | 'failed';
   progress: number;
   operator: string;
+  product?: string;
+  batchSize?: number;
 }
 
 // Generate random temperature between min and max
@@ -51,6 +52,7 @@ const generateMockReactors = (): Reactor[] => {
 const generateMockBatches = (reactors: Reactor[]): Batch[] => {
   const statuses: Batch['status'][] = ['running', 'completed', 'delayed', 'failed'];
   const operators = ['John Smith', 'Emma Johnson', 'Michael Brown', 'Sophia Garcia'];
+  const products = ['Polymer A', 'Catalyst B', 'Solvent C', 'Compound D', 'Mixture E'];
   
   return Array.from({ length: 8 }, (_, i) => {
     const startDate = new Date();
@@ -73,7 +75,9 @@ const generateMockBatches = (reactors: Reactor[]): Batch[] => {
       endTime: endDate,
       status,
       progress,
-      operator: operators[Math.floor(Math.random() * operators.length)]
+      operator: operators[Math.floor(Math.random() * operators.length)],
+      product: products[Math.floor(Math.random() * products.length)],
+      batchSize: randomTemp(500, 1500)
     };
   });
 };
